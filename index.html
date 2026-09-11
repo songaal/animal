@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>여우 — AI 회의 도우미</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="여우">
+<meta name="theme-color" content="#09090f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sb:#0c0d18;--sb-text:#8a87a2;--sb-dim:#484660;
+  --sb-hover:#14162a;--sb-act:#1b1e38;--sb-bdr:#1a1c30;
+  --bg:#09090f;--surface:#111220;--text:#e6e3f4;
+  --muted:#5a5870;--bdr:#1e1f34;--accent:#4f6ef7;
+  --ai-bg:#131424;--ai-bdr:#1e2038;--good:#34d399;--warn:#f59e0b;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+body{font-family:'Source Sans 3',system-ui,sans-serif;background:var(--sb);color:var(--text);height:100dvh;display:flex;overflow:hidden;-webkit-tap-highlight-color:transparent}
+
+#nameOverlay{position:fixed;inset:0;z-index:500;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+.setup-card{background:var(--surface);border:1px solid var(--bdr);border-radius:20px;padding:36px 32px;width:100%;max-width:380px}
+.setup-animal{font-size:52px;margin-bottom:16px;line-height:1}
+.setup-h{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--text);margin-bottom:6px}
+.setup-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:20px}
+.setup-inp{width:100%;padding:12px 14px;border:1.5px solid var(--bdr);border-radius:9px;font-family:'Source Sans 3',sans-serif;font-size:16px;color:var(--text);background:var(--bg);outline:none;margin-bottom:16px;transition:border-color .15s}
+.setup-inp:focus{border-color:var(--accent)}
+.setup-inp::placeholder{color:var(--muted)}
+.setup-lbl{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sb-dim);margin-bottom:8px}
+.lang-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.lang-chip{padding:6px 12px;border:1.5px solid var(--bdr);border-radius:18px;font-size:12px;color:var(--sb-text);cursor:pointer;background:var(--bg);transition:all .12s;touch-action:manipulation;font-family:'Syne',sans-serif;font-weight:600}
+.lang-chip:hover{border-color:var(--accent);color:var(--text)}
+.lang-chip.on{border-color:var(--accent);color:#fff;background:var(--accent)}
+.setup-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:.02em;cursor:pointer;touch-action:manipulation;transition:opacity .12s}
+.setup-btn:hover{opacity:.9}
+
+.sb{width:240px;flex-shrink:0;background:var(--sb);border-right:1px solid var(--sb-bdr);display:flex;flex-direction:column;overflow:hidden;transition:transform .22s ease}
+.sb-head{padding:14px 12px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--sb-bdr);flex-shrink:0}
+.logo{display:flex;align-items:center;gap:9px;cursor:pointer;background:none;border:none;padding:0;min-width:0}
+.logo-mark{width:32px;height:32px;border-radius:8px;background:var(--sb-act);border:1px solid var(--sb-bdr);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.logo-label{display:flex;flex-direction:column;min-width:0}
+.logo-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;line-height:1.2;letter-spacing:-.01em}
+.logo-tag{font-size:9px;font-weight:600;color:var(--sb-dim);letter-spacing:.06em;text-transform:uppercase;line-height:1.3}
+.add-btn{position:relative;width:28px;height:28px;border-radius:7px;background:transparent;border:1px solid var(--sb-bdr);color:var(--sb-text);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s,border-color .12s,color .12s;touch-action:manipulation;flex-shrink:0}
+.add-btn:hover{background:var(--sb-hover);border-color:var(--accent);color:#fff}
+.tip{position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:var(--text);color:var(--bg);font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.04em;padding:5px 9px;border-radius:5px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .14s;z-index:200}
+.add-btn:hover .tip{opacity:1}
+.sb-lbl{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sb-dim);padding:10px 14px 5px;flex-shrink:0}
+.sess-list{flex:1;overflow-y:auto;padding:2px 8px 8px}
+.sess-list::-webkit-scrollbar{width:4px}
+.sess-list::-webkit-scrollbar-thumb{background:var(--sb-bdr);border-radius:2px}
+.sess-empty{padding:14px;font-size:11px;color:var(--sb-dim);font-family:'Syne',sans-serif;line-height:1.55}
+.sess-row{display:flex;align-items:center;gap:8px;padding:7px 8px 7px 10px;border-radius:7px;cursor:pointer;touch-action:manipulation;margin-bottom:1px;transition:background .1s}
+.sess-row:hover{background:var(--sb-hover)}
+.sess-row.on{background:var(--sb-act)}
+.sess-dot{width:6px;height:6px;border-radius:50%;background:var(--sb-dim);flex-shrink:0;margin-top:1px}
+.sess-row.on .sess-dot{background:var(--accent)}
+.sess-row.done .sess-dot{background:var(--good)}
+.sess-info{flex:1;min-width:0}
+.sess-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:600;color:var(--sb-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sess-row.on .sess-title{color:#d4d0f0}
+.sess-meta{font-size:10px;color:var(--sb-dim);margin-top:1px;font-family:'Syne',sans-serif}
+.del-btn{width:22px;height:22px;border-radius:5px;border:none;background:none;color:var(--sb-dim);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;flex-shrink:0;transition:opacity .1s,background .1s,color .1s}
+.sess-row:hover .del-btn{opacity:1}
+.del-btn:hover{background:rgba(239,68,68,.15);color:#ef4444}
+.sb-foot{padding:10px 12px;border-top:1px solid var(--sb-bdr);display:flex;align-items:center;gap:9px;flex-shrink:0;cursor:pointer;transition:background .1s}
+.sb-foot:hover{background:var(--sb-hover)}
+.foot-av{width:30px;height:30px;border-radius:50%;background:var(--sb-act);border:1px solid var(--sb-bdr);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.foot-info{flex:1;min-width:0}
+.foot-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:600;color:var(--sb-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foot-sub{font-size:10px;color:var(--sb-dim);font-family:'Syne',sans-serif;margin-top:1px}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+.topbar{background:var(--surface);border-bottom:1px solid var(--bdr);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;min-height:46px}
+.menu-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 5px;border-radius:5px;display:none;touch-action:manipulation}
+.tb-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:-.01em;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lang-wrap{position:relative}
+.lang-btn{padding:5px 10px;border:1.5px solid var(--bdr);border-radius:5px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.04em;background:none;color:var(--muted);cursor:pointer;white-space:nowrap;touch-action:manipulation;transition:color .12s,border-color .12s}
+.lang-btn:hover{color:var(--text);border-color:var(--muted)}
+.lang-drop{position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);border:1px solid var(--bdr);border-radius:8px;overflow:hidden;z-index:300;min-width:120px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.lang-drop-item{padding:9px 14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;color:var(--sb-text);cursor:pointer;transition:background .1s;display:flex;align-items:center;gap:8px}
+.lang-drop-item:hover{background:var(--sb-hover)}
+.lang-drop-item.on{color:var(--accent)}
+.end-btn{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:none;border:1.5px solid var(--bdr);color:var(--muted);padding:6px 12px;border-radius:5px;cursor:pointer;white-space:nowrap;touch-action:manipulation;transition:color .12s,border-color .12s}
+.end-btn:hover{color:var(--text);border-color:var(--muted)}
+.end-btn:disabled{opacity:.4;cursor:not-allowed}
+
+#welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px 20px;text-align:center;transition:opacity .22s ease}
+#welcome.hiding{opacity:0;pointer-events:none}
+.w-ai{font-size:56px;margin-bottom:6px;line-height:1}
+.w-ai-name{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sb-dim);margin-bottom:20px}
+.w-greeting{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.03em;color:var(--text);line-height:1.25;margin-bottom:8px}
+.w-greeting em{font-style:normal;color:var(--accent)}
+.w-sub{font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.mtg-type-lbl{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sb-dim);margin-bottom:12px}
+.mtg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:480px;width:100%;margin-bottom:28px}
+.mtg-card{background:var(--surface);border:1.5px solid var(--bdr);border-radius:12px;padding:14px 10px;cursor:pointer;touch-action:manipulation;transition:border-color .15s,background .15s;text-align:center}
+.mtg-card:hover{border-color:var(--accent);background:var(--ai-bg)}
+.mtg-card.selected{border-color:var(--accent);background:var(--ai-bg)}
+.mtg-icon{font-size:22px;margin-bottom:6px;line-height:1}
+.mtg-label{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--sb-text);line-height:1.3}
+.mtg-card.selected .mtg-label{color:var(--text)}
+.w-start-btn{padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:.02em;cursor:pointer;touch-action:manipulation;transition:opacity .12s}
+.w-start-btn:hover{opacity:.9}
+
+#chat{flex:1;overflow-y:auto;padding:20px 20px 8px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:14px;opacity:0;transition:opacity .22s ease}
+#chat.visible{opacity:1}
+#chat::-webkit-scrollbar{width:5px}
+#chat::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
+.date-div{text-align:center;font-family:'Syne',sans-serif;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:2px 0}
+.mtg-badge{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--bdr);border-radius:20px;padding:5px 12px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--sb-text);margin:0 auto}
+.mtg-badge-wrap{display:flex;justify-content:center}
+.msg-row{display:flex;gap:10px}
+.msg-row.u{flex-direction:row-reverse}
+.av{width:28px;height:28px;border-radius:50%;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--sb-act);border:1px solid var(--sb-bdr)}
+.av.u{background:var(--accent);border-color:var(--accent)}
+.bubble{max-width:min(72%,520px);padding:10px 14px;font-size:15px;line-height:1.75;word-break:break-word;white-space:pre-wrap;border-radius:12px}
+.bubble.ai{background:var(--ai-bg);color:var(--text);border:1px solid var(--ai-bdr);border-radius:3px 12px 12px 12px}
+.bubble.u{background:var(--accent);color:#fff;border-radius:12px 3px 12px 12px}
+.think-row{display:flex;gap:10px}
+.think-bbl{background:var(--ai-bg);border:1px solid var(--ai-bdr);border-radius:3px 12px 12px 12px;padding:12px 16px;display:flex;gap:5px;align-items:center}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.3;animation:pulse 1.2s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.18s}.dot:nth-child(3){animation-delay:.36s}
+@keyframes pulse{35%{opacity:1;transform:scale(1.35)}}
+.sum-card{background:var(--surface);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-top:4px}
+.sum-head{background:var(--accent);padding:10px 16px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff}
+.sum-body{padding:16px;font-size:14px;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.ibar{padding:10px 16px 14px;background:var(--surface);border-top:1px solid var(--bdr);display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
+#inp{flex:1;padding:10px 14px;border:1.5px solid var(--bdr);border-radius:10px;font-family:'Source Sans 3',sans-serif;font-size:15px;line-height:1.6;color:var(--text);background:var(--bg);outline:none;resize:none;overflow:hidden;height:44px;max-height:140px;transition:border-color .15s,height .12s ease}
+#inp:focus{border-color:var(--accent)}
+#inp::placeholder{color:var(--muted)}
+#inp:disabled{opacity:.5}
+.send-btn{width:40px;height:40px;border-radius:10px;flex-shrink:0;background:var(--accent);border:none;color:#fff;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .12s,transform .1s;touch-action:manipulation}
+.send-btn:active{transform:scale(.92)}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90}
+.overlay.show{display:block}
+@media(max-width:600px){
+  .sb{position:fixed;left:0;top:0;bottom:0;z-index:100;transform:translateX(-100%)}
+  .sb.open{transform:none}
+  .menu-btn{display:flex}
+  .mtg-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(prefers-reduced-motion:reduce){.sb,.dot,#inp{transition:none;animation:none}}
+</style>
+</head>
+<body>
+
+<div id="nameOverlay" hidden>
+  <div class="setup-card">
+    <div class="setup-animal">🦊</div>
+    <div class="setup-h">회의 AI, 여우입니다</div>
+    <div class="setup-sub">이름을 알려주세요. 회의를 함께 이끌어갈게요.</div>
+    <input id="nameInput" class="setup-inp" type="text" placeholder="이름 입력" maxlength="20" autocomplete="off">
+    <div class="setup-lbl">언어 선택</div>
+    <div class="lang-chips" id="setupLangChips">
+      <div class="lang-chip on" data-lang="ko" onclick="selectSetupLang(this)">한국어</div>
+      <div class="lang-chip" data-lang="en" onclick="selectSetupLang(this)">English</div>
+      <div class="lang-chip" data-lang="ja" onclick="selectSetupLang(this)">日本語</div>
+      <div class="lang-chip" data-lang="zh" onclick="selectSetupLang(this)">中文</div>
+    </div>
+    <button class="setup-btn" id="setupBtn" onclick="confirmSetup()">시작하기 →</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeSb()"></div>
+
+<nav class="sb" id="sb">
+  <div class="sb-head">
+    <button class="logo" onclick="goHome()">
+      <div class="logo-mark">🦊</div>
+      <div class="logo-label">
+        <span class="logo-name">여우</span>
+        <span class="logo-tag" id="logoTag">AI 회의 도우미</span>
+      </div>
+    </button>
+    <button class="add-btn" onclick="goHome()">+<span class="tip">새 회의 시작</span></button>
+  </div>
+  <div class="sb-lbl">회의 목록</div>
+  <div class="sess-list" id="sessList"></div>
+  <div class="sb-foot" onclick="editSetup()">
+    <div class="foot-av" id="footAv"></div>
+    <div class="foot-info">
+      <div class="foot-name" id="footName"></div>
+      <div class="foot-sub" id="footSub"></div>
+    </div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <button class="menu-btn" onclick="toggleSb()">☰</button>
+    <div class="tb-title" id="tbTitle">여우 — AI 회의 도우미</div>
+    <div class="lang-wrap">
+      <button class="lang-btn" id="langBtn" onclick="toggleLangDrop()">한국어</button>
+      <div class="lang-drop" id="langDrop" hidden>
+        <div class="lang-drop-item on" data-lang="ko" onclick="setLang('ko')">🇰🇷 한국어</div>
+        <div class="lang-drop-item" data-lang="en" onclick="setLang('en')">🇺🇸 English</div>
+        <div class="lang-drop-item" data-lang="ja" onclick="setLang('ja')">🇯🇵 日本語</div>
+        <div class="lang-drop-item" data-lang="zh" onclick="setLang('zh')">🇨🇳 中文</div>
+      </div>
+    </div>
+    <button class="end-btn" id="endBtn" onclick="endMeeting()" hidden>회의 종료</button>
+  </div>
+
+  <div id="welcome">
+    <div class="w-ai">🦊</div>
+    <div class="w-ai-name">여우</div>
+    <div class="w-greeting">안녕하세요, <em id="wUserName"></em>님.<br>어떤 회의를 시작할까요?</div>
+    <div class="w-sub" id="wSub">회의 유형을 선택하거나 직접 입력하세요</div>
+    <div class="mtg-type-lbl" id="mtgTypeLbl">회의 유형 선택</div>
+    <div class="mtg-grid" id="mtgGrid"></div>
+    <button class="w-start-btn" id="startBtn" onclick="startFromType()">회의 시작 →</button>
+  </div>
+
+  <div id="chat" hidden></div>
+
+  <div class="ibar">
+    <textarea id="inp" rows="1"
+      placeholder="회의 주제나 안건을 입력하세요…"
+      onkeydown="onKey(event)" oninput="growInp(this)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="send()">↑</button>
+  </div>
+</div>
+
+<script>
+const WORKER = 'https://video-listening-practice.songaal.workers.dev';
+const AI_ANIMAL = '🦊';
+const ANIMALS = ['🐻','🐼','🐨','🦁','🐯','🐸','🦋','🐬','🦅','🦉','🐙','🦄','🐺','🦔','🐧','🦘','🦭','🐲','🦚','🐮'];
+const ANIMAL_NAMES = {'🐻':'곰','🐼':'판다','🐨':'코알라','🦁':'사자','🐯':'호랑이','🐸':'개구리','🦋':'나비','🐬':'돌고래','🦅':'독수리','🦉':'부엉이','🐙':'문어','🦄':'유니콘','🐺':'늑대','🦔':'고슴도치','🐧':'펭귄','🦘':'캥거루','🦭':'바다표범','🐲':'용','🦚':'공작','🐮':'소'};
+
+const MTG_TYPES = [
+  {id:'weekly',  icon:'📋',ko:'주간 회의',   en:'Weekly Meeting',    ja:'週次会議',     zh:'周例会'},
+  {id:'kickoff', icon:'🚀',ko:'프로젝트 킥오프',en:'Project Kickoff', ja:'キックオフ',   zh:'项目启动'},
+  {id:'brainstorm',icon:'💡',ko:'브레인스토밍',en:'Brainstorming',    ja:'ブレスト',     zh:'头脑风暴'},
+  {id:'review',  icon:'📊',ko:'성과 리뷰',   en:'Performance Review',ja:'成果レビュー', zh:'绩效回顾'},
+  {id:'1on1',    icon:'🤝',ko:'1:1 면담',    en:'1:1 Meeting',       ja:'1on1',         zh:'一对一'},
+  {id:'planning',icon:'📝',ko:'기획 회의',   en:'Planning Session',  ja:'企画会議',     zh:'策划会议'},
+  {id:'retro',   icon:'🔄',ko:'회고',        en:'Retrospective',     ja:'振り返り',     zh:'回顾会'},
+  {id:'decision',icon:'⚖️',ko:'의사결정',    en:'Decision Making',   ja:'意思決定',     zh:'决策会议'},
+  {id:'other',   icon:'💬',ko:'기타',        en:'Other',             ja:'その他',       zh:'其他'},
+];
+
+const LANG_LABELS = {ko:'한국어',en:'English',ja:'日本語',zh:'中文'};
+const LANG_CFG = {
+  ko:{tag:'AI 회의 도우미',sub:'회의 유형을 선택하거나 직접 입력하세요',typeLabel:'회의 유형 선택',startBtn:'회의 시작 →',endBtn:'회의 종료',placeholder:'회의 주제나 안건을 입력하세요…',chatPH:'메시지를 입력하세요 (Enter 전송)',endedPH:'이 회의는 종료되었습니다',sumHead:'📋 회의록 & 결정사항',
+    sumPrompt:'지금까지의 회의를 다음 형식으로 정리해줘:\n\n## 📋 회의 요약\n핵심 논의 내용 (3~5개 불릿)\n\n## ✅ 결정사항\n합의된 사항들\n\n## 📌 액션 아이템\n구체적인 실행 과제 (담당자, 기한 포함)\n\n## 📅 다음 단계\n후속 회의 또는 검토 사항\n\n실무에 바로 쓸 수 있게 명확하게.'},
+  en:{tag:'AI Meeting Assistant',sub:'Select a type or type your topic',typeLabel:'Select Meeting Type',startBtn:'Start Meeting →',endBtn:'End Meeting',placeholder:'Enter meeting topic or agenda…',chatPH:'Type a message (Enter to send)',endedPH:'This meeting has ended',sumHead:'📋 Meeting Minutes & Decisions',
+    sumPrompt:'Please summarize our meeting:\n\n## 📋 Meeting Summary\nKey discussion points (3-5 bullets)\n\n## ✅ Decisions Made\n\n## 📌 Action Items\nSpecific tasks with owners and deadlines\n\n## 📅 Next Steps\n\nBe clear and actionable.'},
+  ja:{tag:'AI会議アシスタント',sub:'タイプを選択するかトピックを入力',typeLabel:'会議タイプを選択',startBtn:'会議を始める →',endBtn:'会議を終了',placeholder:'会議のテーマや議題を入力…',chatPH:'メッセージを入力 (Enterで送信)',endedPH:'この会議は終了しました',sumHead:'📋 議事録と決定事項',
+    sumPrompt:'会議をまとめてください:\n\n## 📋 会議サマリー\n主な議論（3〜5箇条）\n\n## ✅ 決定事項\n\n## 📌 アクション項目\n担当者・期限付き\n\n## 📅 次のステップ\n\n簡潔にまとめてください。'},
+  zh:{tag:'AI会议助理',sub:'选择类型或输入主题',typeLabel:'选择会议类型',startBtn:'开始会议 →',endBtn:'结束会议',placeholder:'输入会议主题或议程…',chatPH:'输入消息 (Enter发送)',endedPH:'会议已结束',sumHead:'📋 会议纪要与决定事项',
+    sumPrompt:'请总结会议:\n\n## 📋 会议摘要\n主要讨论内容（3-5条）\n\n## ✅ 决定事项\n\n## 📌 行动事项\n含负责人和截止日期\n\n## 📅 下一步\n\n简明扼要。'},
+};
+
+let state={name:'',animal:'',lang:'ko',sessions:[],active:null};
+let ctrl=null,busy=false,viewMode='home',setupLang='ko',selType=MTG_TYPES[0];
+
+function save(){try{localStorage.setItem('fox_v1',JSON.stringify(state));}catch{}}
+function load(){try{const d=localStorage.getItem('fox_v1');if(d)state={...state,...JSON.parse(d)};}catch{}}
+const mkId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmtDate=ts=>new Date(ts).toLocaleDateString('ko-KR',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+const getSess=id=>state.sessions.find(s=>s.id===id);
+const typeLabel=t=>{const l=state.lang||'ko';return l==='ko'?t.ko:l==='en'?t.en:l==='ja'?t.ja:t.zh;};
+function pickAnimal(n){let h=0;for(let i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))>>>0;return ANIMALS[h%ANIMALS.length];}
+
+// ── Worker SSE call ───────────────────────────────────
+async function callWorker(messages, userName, lang, onText, signal) {
+  // Strip system meta-turn (role='system'), keep real conversation
+  const msgs = messages.filter(m => m.role !== 'system').map(m => ({
+    role: m.role === 'user' ? 'user' : 'assistant',
+    content: m.content,
+  }));
+
+  const res = await fetch(`${WORKER}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: msgs, mode: 'meeting', lang, userName }),
+    signal,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '', accumulated = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop() || '';
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const data = line.slice(6).trim();
+      if (data === '[DONE]') continue;
+      try {
+        const j = JSON.parse(data);
+        if (j.type === 'content_block_delta' && j.delta?.type === 'text_delta') {
+          accumulated += j.delta.text;
+          onText({ text: accumulated });
+        }
+      } catch {}
+    }
+  }
+  return accumulated;
+}
+
+load();
+boot();
+
+function boot(){
+  if(!state.name){document.getElementById('nameOverlay').hidden=false;document.getElementById('nameInput').focus();return;}
+  applyProfile();goHome();
+}
+
+function applyProfile(){
+  if(!state.animal)state.animal=pickAnimal(state.name);
+  const lang=state.lang||'ko';const cfg=LANG_CFG[lang];
+  document.getElementById('logoTag').textContent=cfg.tag;
+  document.getElementById('footAv').textContent=state.animal;
+  document.getElementById('footName').textContent=state.name;
+  document.getElementById('footSub').textContent=(ANIMAL_NAMES[state.animal]||'')+'·'+LANG_LABELS[lang];
+  document.getElementById('wUserName').textContent=state.name;
+  document.getElementById('wSub').textContent=cfg.sub;
+  document.getElementById('mtgTypeLbl').textContent=cfg.typeLabel;
+  document.getElementById('startBtn').textContent=cfg.startBtn;
+  document.getElementById('endBtn').textContent=cfg.endBtn;
+  document.getElementById('langBtn').textContent=LANG_LABELS[lang];
+  document.querySelectorAll('#langDrop .lang-drop-item').forEach(el=>el.classList.toggle('on',el.dataset.lang===lang));
+  renderMtgGrid();
+}
+
+function renderMtgGrid(){
+  const grid=document.getElementById('mtgGrid');
+  grid.innerHTML=MTG_TYPES.map(t=>`<div class="mtg-card${selType.id===t.id?' selected':''}" onclick="selectMtgType('${t.id}')"><div class="mtg-icon">${t.icon}</div><div class="mtg-label">${typeLabel(t)}</div></div>`).join('');
+}
+
+function selectMtgType(id){selType=MTG_TYPES.find(t=>t.id===id)||MTG_TYPES[0];renderMtgGrid();}
+function selectSetupLang(el){setupLang=el.dataset.lang;document.querySelectorAll('#setupLangChips .lang-chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+
+function confirmSetup(){
+  const v=document.getElementById('nameInput').value.trim();
+  if(!v){document.getElementById('nameInput').focus();return;}
+  state.name=v;state.animal=pickAnimal(v);state.lang=setupLang;
+  save();document.getElementById('nameOverlay').hidden=true;applyProfile();goHome();
+}
+
+function editSetup(){
+  setupLang=state.lang||'ko';
+  document.querySelectorAll('#setupLangChips .lang-chip').forEach(c=>c.classList.toggle('on',c.dataset.lang===setupLang));
+  document.getElementById('nameInput').value=state.name;
+  document.getElementById('nameOverlay').hidden=false;
+  requestAnimationFrame(()=>{const i=document.getElementById('nameInput');i.focus();i.select();});
+}
+
+function toggleLangDrop(){document.getElementById('langDrop').hidden=!document.getElementById('langDrop').hidden;}
+function setLang(l){state.lang=l;save();document.getElementById('langDrop').hidden=true;applyProfile();}
+document.addEventListener('click',e=>{if(!e.target.closest('.lang-wrap'))document.getElementById('langDrop').hidden=true;});
+
+function goHome(){
+  viewMode='home';state.active=null;closeSb();
+  document.getElementById('welcome').hidden=false;
+  document.getElementById('welcome').classList.remove('hiding');
+  document.getElementById('chat').hidden=true;
+  document.getElementById('chat').classList.remove('visible');
+  document.getElementById('endBtn').hidden=true;
+  document.getElementById('tbTitle').textContent='여우 — AI 회의 도우미';
+  document.getElementById('inp').placeholder=LANG_CFG[state.lang||'ko'].placeholder;
+  document.getElementById('inp').disabled=false;
+  document.getElementById('sendBtn').disabled=false;
+  renderList();
+}
+
+function startFromType(){createSession(typeLabel(selType),selType);}
+
+function createSession(topic,mt){
+  const id=mkId();
+  const s={id,title:topic.slice(0,28)+(topic.length>28?'…':''),mtgType:mt.id,turns:[],ended:false,createdAt:Date.now()};
+  state.sessions.unshift(s);save();
+  transitionToChat(s);return s;
+}
+
+function transitionToChat(s){
+  viewMode='chat';state.active=s.id;save();
+  const welcome=document.getElementById('welcome');const chat=document.getElementById('chat');
+  const mt=MTG_TYPES.find(t=>t.id===s.mtgType)||MTG_TYPES[0];
+  welcome.classList.add('hiding');chat.hidden=false;chat.innerHTML='';
+  const badge=document.createElement('div');badge.className='mtg-badge-wrap';
+  badge.innerHTML=`<div class="mtg-badge">${mt.icon} ${esc(typeLabel(mt))} · ${esc(fmtDate(s.createdAt))}</div>`;
+  chat.appendChild(badge);
+  chat.offsetHeight;
+  requestAnimationFrame(()=>{chat.classList.add('visible');});
+  setTimeout(()=>{welcome.hidden=true;welcome.classList.remove('hiding');},240);
+  const cfg=LANG_CFG[state.lang||'ko'];
+  document.getElementById('tbTitle').textContent=s.title;
+  document.getElementById('endBtn').hidden=s.ended;
+  document.getElementById('inp').placeholder=s.ended?cfg.endedPH:cfg.chatPH;
+  document.getElementById('sendBtn').disabled=s.ended||busy;
+  renderList();
+}
+
+function showChat(s){
+  viewMode='chat';state.active=s.id;save();
+  const welcome=document.getElementById('welcome');const chat=document.getElementById('chat');
+  const mt=MTG_TYPES.find(t=>t.id===s.mtgType)||MTG_TYPES[0];
+  welcome.classList.add('hiding');chat.hidden=false;chat.innerHTML='';
+  const badge=document.createElement('div');badge.className='mtg-badge-wrap';
+  badge.innerHTML=`<div class="mtg-badge">${mt.icon} ${esc(typeLabel(mt))} · ${esc(fmtDate(s.createdAt))}</div>`;
+  chat.appendChild(badge);
+  s.turns.forEach(t=>{
+    if(t.role==='_sum')appendSum(chat,t.content);
+    else if(t.role!=='system')appendBubble(chat,t.role==='user'?'u':'ai',t.content);
+  });
+  chat.offsetHeight;requestAnimationFrame(()=>{chat.classList.add('visible');});
+  setTimeout(()=>{welcome.hidden=true;welcome.classList.remove('hiding');},240);
+  const cfg=LANG_CFG[state.lang||'ko'];
+  document.getElementById('tbTitle').textContent=s.title;
+  document.getElementById('endBtn').hidden=s.ended;
+  document.getElementById('inp').disabled=s.ended||busy;
+  document.getElementById('inp').placeholder=s.ended?cfg.endedPH:cfg.chatPH;
+  document.getElementById('sendBtn').disabled=s.ended||busy;
+  scrollBottom();renderList();
+}
+
+function pick(id){if(id!==state.active)ctrl?.abort();const s=getSess(id);if(!s)return;closeSb();showChat(s);}
+
+function renderList(){
+  const el=document.getElementById('sessList');
+  if(!state.sessions.length){el.innerHTML='<div class="sess-empty">회의가 없습니다.</div>';return;}
+  el.innerHTML=state.sessions.map(s=>{
+    const mt=MTG_TYPES.find(t=>t.id===s.mtgType)||MTG_TYPES[0];
+    const cnt=s.turns.filter(t=>t.role==='user').length;
+    const meta=s.ended?'종료됨 ✓':(cnt>0?cnt+'개 발언':'대기 중');
+    const isOn=s.id===state.active&&viewMode==='chat';
+    const cls=['sess-row',isOn&&'on',s.ended&&'done'].filter(Boolean).join(' ');
+    return `<div class="${cls}" onclick="pick('${s.id}')"><div class="sess-dot"></div><div class="sess-info"><div class="sess-title">${mt.icon} ${esc(s.title)}</div><div class="sess-meta">${esc(meta)}</div></div><button class="del-btn" onclick="event.stopPropagation();delSess('${s.id}')">×</button></div>`;
+  }).join('');
+}
+
+function appendBubble(chat,type,text){
+  const row=document.createElement('div');row.className='msg-row'+(type==='u'?' u':'');
+  const av=type==='u'?(state.animal||'🙂'):AI_ANIMAL;
+  row.innerHTML=`<div class="av${type==='u'?' u':''}">${av}</div><div class="bubble ${type}"></div>`;
+  row.querySelector('.bubble').textContent=text;chat.appendChild(row);return row.querySelector('.bubble');
+}
+function appendThinking(chat){
+  const r=document.createElement('div');r.className='think-row';r.id='trow';
+  r.innerHTML=`<div class="av">${AI_ANIMAL}</div><div class="think-bbl"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  chat.appendChild(r);scrollBottom();return r;
+}
+function appendSum(chat,text){
+  const cfg=LANG_CFG[state.lang||'ko'];
+  const c=document.createElement('div');c.className='sum-card';
+  c.innerHTML=`<div class="sum-head">${esc(cfg.sumHead)}</div><div class="sum-body"></div>`;
+  c.querySelector('.sum-body').textContent=text;chat.appendChild(c);
+}
+function scrollBottom(){const c=document.getElementById('chat');requestAnimationFrame(()=>{c.scrollTop=c.scrollHeight;});}
+
+async function send(){
+  if(busy)return;
+  const inp=document.getElementById('inp');const text=inp.value.trim();if(!text)return;
+  inp.value='';growInp(inp);
+  let s=getSess(state.active);
+  if(viewMode==='home'||!s)s=createSession(text,selType);
+  s.turns.push({role:'user',content:text});save();
+  const chat=document.getElementById('chat');
+  appendBubble(chat,'u',text);
+  const trow=appendThinking(chat);
+  setBusy(true);ctrl=new AbortController();
+  let bbl=null,streamed='';
+  try{
+    streamed=await callWorker(
+      s.turns.filter(t=>t.role!=='_sum'),
+      state.name, state.lang||'ko',
+      ({text:t})=>{streamed=t;if(!bbl){trow.remove();bbl=appendBubble(chat,'ai','');}bbl.textContent=t;scrollBottom();},
+      ctrl.signal
+    );
+    trow.remove();
+    s.turns.push({role:'assistant',content:streamed});save();
+  }catch(e){
+    trow.remove();
+    if(e.name!=='AbortError')appendBubble(chat,'ai','오류가 발생했습니다. 다시 시도해주세요.');
+  }finally{setBusy(false);scrollBottom();renderList();}
+}
+
+async function endMeeting(){
+  if(busy)return;const s=getSess(state.active);if(!s||s.ended)return;
+  document.getElementById('endBtn').disabled=true;
+  const chat=document.getElementById('chat');const trow=appendThinking(chat);
+  setBusy(true);ctrl=new AbortController();
+  const cfg=LANG_CFG[state.lang||'ko'];
+  const msgs=[...s.turns.filter(t=>t.role!=='_sum'),{role:'user',content:cfg.sumPrompt}];
+  let bbl=null,streamed='';
+  try{
+    streamed=await callWorker(
+      msgs, state.name, state.lang||'ko',
+      ({text:t})=>{streamed=t;if(!bbl){trow.remove();bbl=appendBubble(chat,'ai','');}bbl.textContent=t;scrollBottom();},
+      ctrl.signal
+    );
+    trow.remove();
+    if(bbl)bbl.closest('.msg-row')?.remove();
+    s.turns.push({role:'_sum',content:streamed});s.ended=true;save();
+    appendSum(chat,streamed);
+    document.getElementById('endBtn').hidden=true;
+    document.getElementById('inp').disabled=true;
+    document.getElementById('inp').placeholder=cfg.endedPH;
+    document.getElementById('sendBtn').disabled=true;
+    renderList();scrollBottom();
+  }catch(e){
+    trow.remove();
+    if(e.name!=='AbortError')appendBubble(chat,'ai','요약 생성 중 오류가 발생했습니다.');
+    document.getElementById('endBtn').disabled=false;
+  }finally{setBusy(false);}
+}
+
+function delSess(id){if(id===state.active)ctrl?.abort();state.sessions=state.sessions.filter(s=>s.id!==id);if(state.active===id)goHome();else{save();renderList();}}
+function setBusy(v){busy=v;const s=getSess(state.active);if(!s?.ended){document.getElementById('inp').disabled=v;document.getElementById('sendBtn').disabled=v;}}
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function growInp(el){el.style.height='auto';const h=Math.min(el.scrollHeight,140);el.style.height=h+'px';el.style.overflowY=el.scrollHeight>140?'auto':'hidden';}
+function toggleSb(){document.getElementById('sb').classList.toggle('open');document.getElementById('overlay').classList.toggle('show');}
+function closeSb(){document.getElementById('sb').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+document.getElementById('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')confirmSetup();});
+
+// PWA
+(function(){
+  function makeIcon(sz){const c=document.createElement('canvas');c.width=c.height=sz;const ctx=c.getContext('2d');ctx.fillStyle='#4f6ef7';ctx.beginPath();ctx.roundRect(0,0,sz,sz,sz*.22);ctx.fill();ctx.font=`${sz*.5}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🦊',sz/2,sz/2+sz*.03);return c.toDataURL('image/png');}
+  setTimeout(()=>{const i192=makeIcon(192),i512=makeIcon(512);const m={name:'여우',short_name:'여우',description:'AI Meeting Assistant',start_url:'./',display:'standalone',background_color:'#09090f',theme_color:'#09090f',icons:[{src:i192,sizes:'192x192',type:'image/png'},{src:i512,sizes:'512x512',type:'image/png',purpose:'any maskable'}]};const blob=new Blob([JSON.stringify(m)],{type:'application/manifest+json'});const lnk=document.createElement('link');lnk.rel='manifest';lnk.href=URL.createObjectURL(blob);document.head.appendChild(lnk);const al=document.createElement('link');al.rel='apple-touch-icon';al.href=i192;document.head.appendChild(al);},500);
+  let dp=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;const btn=document.createElement('button');btn.textContent='홈 화면에 추가';btn.style.cssText='position:fixed;bottom:80px;right:16px;z-index:999;background:#4f6ef7;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-family:Syne,sans-serif;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(79,110,247,.4);';btn.onclick=()=>{btn.remove();dp.prompt();dp=null;};document.body.appendChild(btn);setTimeout(()=>btn.remove(),12000);});
+})();
+</script>
+</body>
+</html>
