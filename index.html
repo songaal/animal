@@ -207,11 +207,13 @@ body{
   transition:background .12s;
 }
 .sess-row:hover{background:var(--surface)}
-.sess-row.on{background:var(--surface2)}
+.sess-row.on{background:var(--surface2);border-left:2px solid var(--accent);padding-left:8px}
 .sess-pip{
   width:5px;height:5px;border-radius:50%;
   background:var(--muted);flex-shrink:0;
+  transition:background .15s;
 }
+.sess-row:hover .sess-pip{background:var(--text2)}
 .sess-row.on .sess-pip{background:var(--accent)}
 .sess-row.done .sess-pip{background:var(--good)}
 .sess-info{flex:1;min-width:0}
@@ -819,30 +821,17 @@ function createSession(topic,mt){
   transitionToChat(s);return s;
 }
 
-function transitionToChat(s){
-  viewMode='chat';state.active=s.id;save();
-  const welcome=document.getElementById('welcome');const chat=document.getElementById('chat');
-  const mt=MTG_TYPES.find(t=>t.id===s.mtgType)||MTG_TYPES[0];
-  welcome.classList.add('hiding');chat.hidden=false;chat.innerHTML='';
-  const badge=document.createElement('div');badge.className='mtg-badge-wrap';
-  badge.innerHTML=`<div class="mtg-badge">${mt.icon} ${esc(typeLabel(mt))} · ${esc(fmtDate(s.createdAt))}</div>`;
-  chat.appendChild(badge);
-  chat.offsetHeight;
-  requestAnimationFrame(()=>{chat.classList.add('visible');});
-  setTimeout(()=>{welcome.hidden=true;welcome.classList.remove('hiding');},240);
-  const cfg=LANG_CFG[state.lang||'ko'];
-  document.getElementById('tbTitle').textContent=s.title;
-  document.getElementById('endBtn').hidden=s.ended;
-  document.getElementById('inp').placeholder=s.ended?cfg.endedPH:cfg.chatPH;
-  document.getElementById('sendBtn').disabled=s.ended||busy;
-  renderList();
-}
+function transitionToChat(s){showChat(s);}
 
 function showChat(s){
+  const fromHome=viewMode==='home';
   viewMode='chat';state.active=s.id;save();
-  const welcome=document.getElementById('welcome');const chat=document.getElementById('chat');
+  const welcome=document.getElementById('welcome');
+  const chat=document.getElementById('chat');
   const mt=MTG_TYPES.find(t=>t.id===s.mtgType)||MTG_TYPES[0];
-  welcome.classList.add('hiding');chat.hidden=false;chat.innerHTML='';
+
+  // 콘텐츠 빌드
+  chat.innerHTML='';
   const badge=document.createElement('div');badge.className='mtg-badge-wrap';
   badge.innerHTML=`<div class="mtg-badge">${mt.icon} ${esc(typeLabel(mt))} · ${esc(fmtDate(s.createdAt))}</div>`;
   chat.appendChild(badge);
@@ -851,14 +840,25 @@ function showChat(s){
     else if(t.role==='user')appendBubble(chat,'u',t.content);
     else if(t.role==='assistant')appendBubble(chat,'ai',t.content);
   });
-  chat.offsetHeight;requestAnimationFrame(()=>{chat.classList.add('visible');});
-  setTimeout(()=>{welcome.hidden=true;welcome.classList.remove('hiding');},240);
+
   const cfg=LANG_CFG[state.lang||'ko'];
   document.getElementById('tbTitle').textContent=s.title;
   document.getElementById('endBtn').hidden=s.ended;
-  document.getElementById('inp').disabled=s.ended||busy;
+  document.getElementById('inp').disabled=s.ended;
   document.getElementById('inp').placeholder=s.ended?cfg.endedPH:cfg.chatPH;
-  document.getElementById('sendBtn').disabled=s.ended||busy;
+  document.getElementById('sendBtn').disabled=s.ended;
+
+  if(fromHome){
+    // 홈→채팅: 페이드 트랜지션
+    welcome.classList.add('hiding');
+    chat.hidden=false;chat.classList.remove('visible');
+    chat.offsetHeight;
+    requestAnimationFrame(()=>{chat.classList.add('visible');});
+    setTimeout(()=>{welcome.hidden=true;welcome.classList.remove('hiding');},240);
+  } else {
+    // 채팅→채팅: 즉시 전환
+    chat.hidden=false;chat.classList.add('visible');
+  }
   scrollBottom();renderList();
 }
 
