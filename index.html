@@ -775,6 +775,7 @@ function setLang(l){state.lang=l;save();document.getElementById('langDrop').hidd
 document.addEventListener('click',e=>{if(!e.target.closest('.lang-wrap'))document.getElementById('langDrop').hidden=true;});
 
 function goHome(){
+  ctrl?.abort();ctrl=null;busy=false;
   viewMode='home';state.active=null;closeSb();
   document.getElementById('welcome').hidden=false;
   document.getElementById('welcome').classList.remove('hiding');
@@ -861,7 +862,7 @@ function showChat(s){
   scrollBottom();renderList();
 }
 
-function pick(id){if(id!==state.active)ctrl?.abort();const s=getSess(id);if(!s)return;closeSb();showChat(s);}
+function pick(id){if(id!==state.active){ctrl?.abort();ctrl=null;busy=false;}const s=getSess(id);if(!s)return;closeSb();showChat(s);}
 
 function renderList(){
   const el=document.getElementById('sessList');
