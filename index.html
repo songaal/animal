@@ -809,8 +809,16 @@ function applyProfile(){
   document.getElementById('setupLangLbl').textContent=cfg.setupLangLbl;
   document.getElementById('setupBtn').textContent=cfg.setupSubmit;
   document.getElementById('nameInput').placeholder=cfg.namePH;
-  // topbar (홈 상태일 때)
-  if(viewMode==='home')document.getElementById('tbTitle').textContent=cfg.tbHome;
+  // topbar
+  if(viewMode==='home'){
+    document.getElementById('tbTitle').textContent=cfg.tbHome;
+  } else if(viewMode==='chat'&&state.active){
+    // 채팅 중 언어 변경 시 회의 타입 뱃지 업데이트
+    const _s=getSess(state.active);
+    const _mt=MTG_TYPES.find(t=>t.id===_s?.mtgType)||MTG_TYPES[0];
+    const _badge=document.querySelector('.mtg-badge');
+    if(_badge&&_s)_badge.textContent=`${_mt.icon} ${typeLabel(_mt)} · ${fmtDate(_s.createdAt)}`;
+  }
   // 입력창 placeholder
   const s=getSess(state.active);
   document.getElementById('inp').placeholder=s?.ended?cfg.endedPH:(viewMode==='chat'?cfg.chatPH:cfg.placeholder);
@@ -954,13 +962,16 @@ function renderList(){
 
 function appendBubble(chat,type,text){
   const row=document.createElement('div');row.className='msg-row'+(type==='u'?' u':'');
-  const av=type==='u'?(state.animal||'🙂'):AI_ANIMAL;
-  row.innerHTML=`<div class="av${type==='u'?' u':''}">${av}</div><div class="bubble ${type}"></div>`;
+  if(type==='u'){
+    row.innerHTML=`<div class="av u">${state.animal||'🙂'}</div><div class="bubble u"></div>`;
+  } else {
+    row.innerHTML=`<div class="bubble ai"></div>`;
+  }
   row.querySelector('.bubble').textContent=text;chat.appendChild(row);return row.querySelector('.bubble');
 }
 function appendThinking(chat){
   const r=document.createElement('div');r.className='think-row';r.id='trow';
-  r.innerHTML=`<div class="av">${AI_ANIMAL}</div><div class="think-bbl"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  r.innerHTML=`<div class="think-bbl"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
   chat.appendChild(r);scrollBottom();return r;
 }
 function appendSum(chat,text){
