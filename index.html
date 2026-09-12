@@ -532,11 +532,11 @@ body{
 <div id="nameOverlay" hidden>
   <div class="setup-card">
     <div class="setup-fox"><span>🦊</span>FOX</div>
-    <div class="setup-h">AI 회의 도우미입니다</div>
-    <div class="setup-sub">이름을 알려주세요. 더 나은 회의를 함께 이끌어갈게요.</div>
-    <div class="setup-field-lbl">이름</div>
+    <div class="setup-h" id="setupH">AI 회의 도우미입니다</div>
+    <div class="setup-sub" id="setupSub">이름을 알려주세요. 더 나은 회의를 함께 이끌어갈게요.</div>
+    <div class="setup-field-lbl" id="setupNameLbl">이름</div>
     <input id="nameInput" class="setup-inp" type="text" placeholder="이름 입력" maxlength="20" autocomplete="off">
-    <div class="setup-field-lbl">언어</div>
+    <div class="setup-field-lbl" id="setupLangLbl">언어</div>
     <div class="lang-chips" id="setupLangChips">
       <div class="lang-chip on" data-lang="ko" onclick="selectSetupLang(this)">한국어</div>
       <div class="lang-chip" data-lang="en" onclick="selectSetupLang(this)">English</div>
@@ -558,9 +558,9 @@ body{
         <span class="logo-sub" id="logoTag">AI 회의 도우미</span>
       </div>
     </button>
-    <button class="new-btn" onclick="goHome()">+<span class="tip">새 회의 시작</span></button>
+    <button class="new-btn" onclick="goHome()">+<span class="tip" id="newTip">새 회의 시작</span></button>
   </div>
-  <div class="sb-section">회의 목록</div>
+  <div class="sb-section" id="sbSection">회의 목록</div>
   <div class="sess-list" id="sessList"></div>
   <div class="sb-foot" onclick="editSetup()">
     <div class="foot-av" id="footAv"></div>
@@ -588,7 +588,7 @@ body{
   </div>
 
   <div id="welcome">
-    <div class="w-greeting">안녕하세요, <em id="wUserName"></em>님.<br>어떤 회의를 시작할까요?</div>
+    <div class="w-greeting"><span id="wGreetPre">안녕하세요, </span><em id="wUserName"></em><span id="wGreetMid">님.</span><br><span id="wGreetLine2">어떤 회의를 시작할까요?</span></div>
     <div class="w-sub" id="wSub">회의 유형을 선택하면 바로 시작됩니다</div>
     <div class="mtg-grid" id="mtgGrid"></div>
   </div>
@@ -660,14 +660,66 @@ const MTG_OPEN = {
 
 const LANG_LABELS = {ko:'한국어',en:'English',ja:'日本語',zh:'中文'};
 const LANG_CFG = {
-  ko:{tag:'AI 회의 도우미',sub:'회의 유형을 선택하거나 직접 입력하세요',typeLabel:'회의 유형 선택',startBtn:'회의 시작 →',endBtn:'회의 종료',placeholder:'회의 주제나 안건을 입력하세요…',chatPH:'메시지를 입력하세요 (Enter 전송)',endedPH:'이 회의는 종료되었습니다',sumHead:'📋 회의록 & 결정사항',
-    sumPrompt:'지금까지의 회의를 다음 형식으로 정리해줘:\n\n## 📋 회의 요약\n핵심 논의 내용 (3~5개 불릿)\n\n## ✅ 결정사항\n합의된 사항들\n\n## 📌 액션 아이템\n구체적인 실행 과제 (담당자, 기한 포함)\n\n## 📅 다음 단계\n후속 회의 또는 검토 사항\n\n실무에 바로 쓸 수 있게 명확하게.'},
-  en:{tag:'AI Meeting Assistant',sub:'Select a type or type your topic',typeLabel:'Select Meeting Type',startBtn:'Start Meeting →',endBtn:'End Meeting',placeholder:'Enter meeting topic or agenda…',chatPH:'Type a message (Enter to send)',endedPH:'This meeting has ended',sumHead:'📋 Meeting Minutes & Decisions',
-    sumPrompt:'Please summarize our meeting:\n\n## 📋 Meeting Summary\nKey discussion points (3-5 bullets)\n\n## ✅ Decisions Made\n\n## 📌 Action Items\nSpecific tasks with owners and deadlines\n\n## 📅 Next Steps\n\nBe clear and actionable.'},
-  ja:{tag:'AI会議アシスタント',sub:'タイプを選択するかトピックを入力',typeLabel:'会議タイプを選択',startBtn:'会議を始める →',endBtn:'会議を終了',placeholder:'会議のテーマや議題を入力…',chatPH:'メッセージを入力 (Enterで送信)',endedPH:'この会議は終了しました',sumHead:'📋 議事録と決定事項',
-    sumPrompt:'会議をまとめてください:\n\n## 📋 会議サマリー\n主な議論（3〜5箇条）\n\n## ✅ 決定事項\n\n## 📌 アクション項目\n担当者・期限付き\n\n## 📅 次のステップ\n\n簡潔にまとめてください。'},
-  zh:{tag:'AI会议助理',sub:'选择类型或输入主题',typeLabel:'选择会议类型',startBtn:'开始会议 →',endBtn:'结束会议',placeholder:'输入会议主题或议程…',chatPH:'输入消息 (Enter发送)',endedPH:'会议已结束',sumHead:'📋 会议纪要与决定事项',
-    sumPrompt:'请总结会议:\n\n## 📋 会议摘要\n主要讨论内容（3-5条）\n\n## ✅ 决定事项\n\n## 📌 行动事项\n含负责人和截止日期\n\n## 📅 下一步\n\n简明扼要。'},
+  ko:{
+    tag:'AI 회의 도우미', sub:'회의 유형을 선택하면 바로 시작됩니다',
+    endBtn:'회의 종료', placeholder:'회의 주제나 안건을 입력하세요…',
+    chatPH:'메시지를 입력하세요 (Enter 전송)', endedPH:'이 회의는 종료되었습니다',
+    sumHead:'📋 회의록 & 결정사항',
+    tbHome:'FOX — AI 회의 도우미',
+    greetPre:'안녕하세요, ', greetMid:'님.', greetLine2:'어떤 회의를 시작할까요?',
+    sidebarTitle:'회의 목록', newTip:'새 회의 시작', namePH:'이름 입력',
+    emptyState:'아직 회의가 없습니다.\n새 회의를 시작해보세요.',
+    statusEnded:'종료됨 ✓', statusWaiting:'대기 중', statusTurnsPost:'개 발언',
+    setupH:'AI 회의 도우미입니다',
+    setupSub:'이름을 알려주세요. 더 나은 회의를 함께 이끌어갈게요.',
+    setupNameLbl:'이름', setupLangLbl:'언어', setupSubmit:'시작하기 →',
+    sumPrompt:'지금까지의 회의를 다음 형식으로 정리해줘:\n\n## 📋 회의 요약\n핵심 논의 내용 (3~5개 불릿)\n\n## ✅ 결정사항\n합의된 사항들\n\n## 📌 액션 아이템\n구체적인 실행 과제 (담당자, 기한 포함)\n\n## 📅 다음 단계\n후속 회의 또는 검토 사항\n\n실무에 바로 쓸 수 있게 명확하게.',
+  },
+  en:{
+    tag:'AI Meeting Assistant', sub:'Select a type to start immediately',
+    endBtn:'End Meeting', placeholder:'Enter meeting topic or agenda…',
+    chatPH:'Type a message (Enter to send)', endedPH:'This meeting has ended',
+    sumHead:'📋 Meeting Minutes & Decisions',
+    tbHome:'FOX — AI Meeting Assistant',
+    greetPre:'Hello, ', greetMid:'.', greetLine2:'What meeting would you like to start?',
+    sidebarTitle:'Meetings', newTip:'New Meeting', namePH:'Enter your name',
+    emptyState:'No meetings yet.\nStart a new one!',
+    statusEnded:'Ended ✓', statusWaiting:'Waiting', statusTurnsPost:' turns',
+    setupH:'Your AI Meeting Assistant',
+    setupSub:'Share your name and I\'ll help run every meeting.',
+    setupNameLbl:'Name', setupLangLbl:'Language', setupSubmit:'Get Started →',
+    sumPrompt:'Please summarize our meeting:\n\n## 📋 Meeting Summary\nKey discussion points (3-5 bullets)\n\n## ✅ Decisions Made\n\n## 📌 Action Items\nSpecific tasks with owners and deadlines\n\n## 📅 Next Steps\n\nBe clear and actionable.',
+  },
+  ja:{
+    tag:'AI会議アシスタント', sub:'タイプを選択するとすぐに始まります',
+    endBtn:'会議を終了', placeholder:'会議のテーマや議題を入力…',
+    chatPH:'メッセージを入力 (Enterで送信)', endedPH:'この会議は終了しました',
+    sumHead:'📋 議事録と決定事項',
+    tbHome:'FOX — AI会議アシスタント',
+    greetPre:'こんにちは、', greetMid:'さん。', greetLine2:'どんな会議を始めますか？',
+    sidebarTitle:'会議一覧', newTip:'新しい会議', namePH:'名前を入力',
+    emptyState:'会議がありません。\n新しい会議を始めましょう。',
+    statusEnded:'終了 ✓', statusWaiting:'待機中', statusTurnsPost:'発言',
+    setupH:'AI会議アシスタントです',
+    setupSub:'お名前を教えてください。より良い会議をお手伝いします。',
+    setupNameLbl:'名前', setupLangLbl:'言語', setupSubmit:'始める →',
+    sumPrompt:'会議をまとめてください:\n\n## 📋 会議サマリー\n主な議論（3〜5箇条）\n\n## ✅ 決定事項\n\n## 📌 アクション項目\n担当者・期限付き\n\n## 📅 次のステップ\n\n簡潔にまとめてください。',
+  },
+  zh:{
+    tag:'AI会议助理', sub:'选择类型即刻开始',
+    endBtn:'结束会议', placeholder:'输入会议主题或议程…',
+    chatPH:'输入消息 (Enter发送)', endedPH:'会议已结束',
+    sumHead:'📋 会议纪要与决定事项',
+    tbHome:'FOX — AI会议助理',
+    greetPre:'你好，', greetMid:'。', greetLine2:'今天想开什么会议？',
+    sidebarTitle:'会议列表', newTip:'新建会议', namePH:'输入姓名',
+    emptyState:'暂无会议。\n开始新会议吧！',
+    statusEnded:'已结束 ✓', statusWaiting:'等待中', statusTurnsPost:'条发言',
+    setupH:'我是AI会议助理',
+    setupSub:'请告诉我您的名字，我来帮您主持会议。',
+    setupNameLbl:'姓名', setupLangLbl:'语言', setupSubmit:'开始 →',
+    sumPrompt:'请总结会议:\n\n## 📋 会议摘要\n主要讨论内容（3-5条）\n\n## ✅ 决定事项\n\n## 📌 行动事项\n含负责人和截止日期\n\n## 📅 下一步\n\n简明扼要。',
+  },
 };
 
 let state={name:'',animal:'',lang:'ko',sessions:[],active:null};
@@ -733,16 +785,37 @@ function boot(){
 function applyProfile(){
   if(!state.animal)state.animal=pickAnimal(state.name);
   const lang=state.lang||'ko';const cfg=LANG_CFG[lang];
+  // 사이드바
   document.getElementById('logoTag').textContent=cfg.tag;
+  document.getElementById('sbSection').textContent=cfg.sidebarTitle;
+  document.getElementById('newTip').textContent=cfg.newTip;
   document.getElementById('footAv').textContent=state.animal;
   document.getElementById('footName').textContent=state.name;
   document.getElementById('footSub').textContent=(ANIMAL_NAMES[state.animal]||'')+'  ·  '+LANG_LABELS[lang];
+  // 홈 인사말
+  document.getElementById('wGreetPre').textContent=cfg.greetPre;
   document.getElementById('wUserName').textContent=state.name;
+  document.getElementById('wGreetMid').textContent=cfg.greetMid;
+  document.getElementById('wGreetLine2').textContent=cfg.greetLine2;
   document.getElementById('wSub').textContent=cfg.sub;
+  // 버튼
   document.getElementById('endBtn').textContent=cfg.endBtn;
   document.getElementById('langBtn').textContent=LANG_LABELS[lang];
   document.querySelectorAll('#langDrop .lang-drop-item').forEach(el=>el.classList.toggle('on',el.dataset.lang===lang));
+  // 셋업 화면
+  document.getElementById('setupH').textContent=cfg.setupH;
+  document.getElementById('setupSub').textContent=cfg.setupSub;
+  document.getElementById('setupNameLbl').textContent=cfg.setupNameLbl;
+  document.getElementById('setupLangLbl').textContent=cfg.setupLangLbl;
+  document.getElementById('setupBtn').textContent=cfg.setupSubmit;
+  document.getElementById('nameInput').placeholder=cfg.namePH;
+  // topbar (홈 상태일 때)
+  if(viewMode==='home')document.getElementById('tbTitle').textContent=cfg.tbHome;
+  // 입력창 placeholder
+  const s=getSess(state.active);
+  document.getElementById('inp').placeholder=s?.ended?cfg.endedPH:(viewMode==='chat'?cfg.chatPH:cfg.placeholder);
   renderMtgGrid();
+  renderList();
 }
 
 function renderMtgGrid(){
@@ -784,8 +857,9 @@ function goHome(){
   document.getElementById('chat').hidden=true;
   document.getElementById('chat').classList.remove('visible');
   document.getElementById('endBtn').hidden=true;
-  document.getElementById('tbTitle').textContent='FOX — AI 회의 도우미';
-  document.getElementById('inp').placeholder=LANG_CFG[state.lang||'ko'].placeholder;
+  const _cfg=LANG_CFG[state.lang||'ko'];
+  document.getElementById('tbTitle').textContent=_cfg.tbHome;
+  document.getElementById('inp').placeholder=_cfg.placeholder;
   document.getElementById('inp').disabled=false;
   document.getElementById('sendBtn').disabled=false;
   renderList();
@@ -866,11 +940,12 @@ function pick(id){if(id!==state.active){ctrl?.abort();ctrl=null;busy=false;}cons
 
 function renderList(){
   const el=document.getElementById('sessList');
-  if(!state.sessions.length){el.innerHTML='<div class="sess-empty">아직 회의가 없습니다.<br>새 회의를 시작해보세요.</div>';return;}
+  const cfg=LANG_CFG[state.lang||'ko'];
+  if(!state.sessions.length){el.innerHTML=`<div class="sess-empty">${cfg.emptyState.replace(/\n/g,'<br>')}</div>`;return;}
   el.innerHTML=state.sessions.map(s=>{
     const mt=MTG_TYPES.find(t=>t.id===s.mtgType)||MTG_TYPES[0];
     const cnt=s.turns.filter(t=>t.role==='user').length;
-    const meta=s.ended?'종료됨 ✓':(cnt>0?cnt+'개 발언':'대기 중');
+    const meta=s.ended?cfg.statusEnded:(cnt>0?cnt+cfg.statusTurnsPost:cfg.statusWaiting);
     const isOn=s.id===state.active&&viewMode==='chat';
     const cls=['sess-row',isOn&&'on',s.ended&&'done'].filter(Boolean).join(' ');
     return `<div class="${cls}" onclick="pick('${s.id}')"><div class="sess-pip"></div><div class="sess-info"><div class="sess-title">${mt.icon} ${esc(s.title)}</div><div class="sess-meta">${esc(meta)}</div></div><button class="del-btn" onclick="event.stopPropagation();delSess('${s.id}')">×</button></div>`;
