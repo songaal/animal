@@ -335,26 +335,11 @@ body{
   gap:0;
 }
 #welcome.hiding{opacity:0;pointer-events:none}
-.w-fox{
-  font-family:'DM Serif Display',Georgia,serif;
-  font-style:italic;
-  font-size:64px;
-  color:var(--fox);
-  line-height:1;
-  margin-bottom:2px;
-  letter-spacing:-.03em;
-  text-shadow:0 0 48px rgba(244,136,42,.25);
-}
-.w-fox-tag{
-  font-size:10px;font-weight:600;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--muted);
-  margin-bottom:28px;
-}
 .w-greeting{
   font-family:'DM Serif Display',Georgia,serif;
-  font-size:30px;font-weight:400;
+  font-size:28px;font-weight:400;
   color:var(--text);
-  line-height:1.3;
+  line-height:1.35;
   margin-bottom:8px;
   letter-spacing:-.02em;
   text-wrap:balance;
@@ -631,8 +616,6 @@ body{
   </div>
 
   <div id="welcome">
-    <div class="w-fox">🦊 FOX</div>
-    <div class="w-fox-tag" id="logoTag2">AI 회의 도우미</div>
     <div class="w-greeting">안녕하세요, <em id="wUserName"></em>님.<br>어떤 회의를 시작할까요?</div>
     <div class="w-sub" id="wSub">회의 유형을 선택하거나 직접 입력하세요</div>
     <div class="mtg-type-lbl" id="mtgTypeLbl">회의 유형 선택</div>
@@ -657,16 +640,53 @@ const ANIMALS = ['🐻','🐼','🐨','🦁','🐯','🐸','🦋','🐬','🦅',
 const ANIMAL_NAMES = {'🐻':'곰','🐼':'판다','🐨':'코알라','🦁':'사자','🐯':'호랑이','🐸':'개구리','🦋':'나비','🐬':'돌고래','🦅':'독수리','🦉':'부엉이','🐙':'문어','🦄':'유니콘','🐺':'늑대','🦔':'고슴도치','🐧':'펭귄','🦘':'캥거루','🦭':'바다표범','🐲':'용','🦚':'공작','🐮':'소'};
 
 const MTG_TYPES = [
-  {id:'weekly',  icon:'📋',ko:'주간 회의',   en:'Weekly Meeting',    ja:'週次会議',     zh:'周例会'},
-  {id:'kickoff', icon:'🚀',ko:'프로젝트 킥오프',en:'Project Kickoff', ja:'キックオフ',   zh:'项目启动'},
-  {id:'brainstorm',icon:'💡',ko:'브레인스토밍',en:'Brainstorming',    ja:'ブレスト',     zh:'头脑风暴'},
-  {id:'review',  icon:'📊',ko:'성과 리뷰',   en:'Performance Review',ja:'成果レビュー', zh:'绩效回顾'},
-  {id:'1on1',    icon:'🤝',ko:'1:1 면담',    en:'1:1 Meeting',       ja:'1on1',         zh:'一对一'},
-  {id:'planning',icon:'📝',ko:'기획 회의',   en:'Planning Session',  ja:'企画会議',     zh:'策划会议'},
-  {id:'retro',   icon:'🔄',ko:'회고',        en:'Retrospective',     ja:'振り返り',     zh:'回顾会'},
-  {id:'decision',icon:'⚖️',ko:'의사결정',    en:'Decision Making',   ja:'意思決定',     zh:'决策会议'},
-  {id:'other',   icon:'💬',ko:'기타',        en:'Other',             ja:'その他',       zh:'其他'},
+  {id:'weekly',     icon:'📋',ko:'주간 회의',   en:'Weekly Meeting',   ja:'週次会議', zh:'周例会'},
+  {id:'kickoff',    icon:'🚀',ko:'킥오프',      en:'Kickoff',          ja:'キックオフ',zh:'项目启动'},
+  {id:'brainstorm', icon:'💡',ko:'브레인스토밍', en:'Brainstorming',    ja:'ブレスト', zh:'头脑风暴'},
+  {id:'1on1',       icon:'🤝',ko:'1:1 면담',    en:'1:1 Meeting',      ja:'1on1',     zh:'一对一'},
+  {id:'retro',      icon:'🔄',ko:'회고',        en:'Retrospective',    ja:'振り返り', zh:'回顾会'},
+  {id:'other',      icon:'💬',ko:'기타',        en:'Other',            ja:'その他',   zh:'其他'},
 ];
+
+// 회의 유형별 자동 시작 메시지
+const MTG_OPEN = {
+  weekly:{
+    ko:`주간 회의를 시작합니다. 지난 주 성과 리뷰 → 이슈/리스크 공유 → 이번 주 계획 순서로 이끌어주세요.`,
+    en:`Starting the weekly meeting. Guide us: last week's results → issues/risks → this week's plan.`,
+    ja:`週次会議を始めます。先週の成果→課題共有→今週の計画の順で進めてください。`,
+    zh:`开始周例会。请按顺序引导：上周成果→问题/风险→本周计划。`,
+  },
+  kickoff:{
+    ko:`프로젝트 킥오프를 시작합니다. 목표/비전 명확화 → 범위 설정 → 일정·역할 분담 순서로 이끌어주세요.`,
+    en:`Starting the project kickoff. Guide us: vision/goals → scope → timeline and role assignment.`,
+    ja:`キックオフを始めます。目標・ビジョン→スコープ→スケジュール・役割分担の順で進めてください。`,
+    zh:`开始项目启动会。请引导：目标/愿景→范围→时间线和角色分工。`,
+  },
+  brainstorm:{
+    ko:`브레인스토밍을 시작합니다. 판단 없이 아이디어를 최대한 많이 끌어내고, 이후 분류·우선순위를 잡아주세요.`,
+    en:`Starting a brainstorming session. Draw out as many ideas as possible without judgment, then cluster and prioritize.`,
+    ja:`ブレストを始めます。批判なしにアイデアをできるだけ引き出し、後でグルーピング・優先順位付けを行ってください。`,
+    zh:`开始头脑风暴。请在不评判的情况下尽量引出更多想法，再进行分类和优先排序。`,
+  },
+  '1on1':{
+    ko:`1:1 면담을 시작합니다. 성과·어려움 → 성장/지원 니즈 → 다음 기간 목표 순서로 편안하게 이끌어주세요.`,
+    en:`Starting a 1:1. Guide us through: progress/challenges → growth and support needs → goals for next period.`,
+    ja:`1on1を始めます。成果・課題→成長・サポートニーズ→次期目標の順で進めてください。`,
+    zh:`开始一对一。请依次引导：进展/挑战→成长和支持需求→下期目标。`,
+  },
+  retro:{
+    ko:`회고를 시작합니다. 잘된 점 Keep → 개선할 점 Problem → 다음 액션 Try 순서로 구조적으로 이끌어주세요.`,
+    en:`Starting a retrospective. Guide us through: Keep (what went well) → Problem (what to improve) → Try (next actions).`,
+    ja:`振り返りを始めます。Keep（良かった点）→Problem（改善点）→Try（次のアクション）で進めてください。`,
+    zh:`开始回顾会。请按结构引导：Keep（做得好的）→Problem（待改进）→Try（下一步行动）。`,
+  },
+  other:{
+    ko:`회의를 시작합니다. 오늘 다룰 안건이 무엇인지 여쭤보고, 효율적으로 진행될 수 있도록 이끌어주세요.`,
+    en:`Meeting is starting. Ask what's on the agenda today and help run it efficiently.`,
+    ja:`会議を始めます。今日の議題を確認し、効率的に進められるようにお願いします。`,
+    zh:`会议开始。请先询问今天的议题，然后高效推进会议。`,
+  },
+};
 
 const LANG_LABELS = {ko:'한국어',en:'English',ja:'日本語',zh:'中文'};
 const LANG_CFG = {
@@ -744,7 +764,6 @@ function applyProfile(){
   if(!state.animal)state.animal=pickAnimal(state.name);
   const lang=state.lang||'ko';const cfg=LANG_CFG[lang];
   document.getElementById('logoTag').textContent=cfg.tag;
-  document.getElementById('logoTag2').textContent=cfg.tag;
   document.getElementById('footAv').textContent=state.animal;
   document.getElementById('footName').textContent=state.name;
   document.getElementById('footSub').textContent=(ANIMAL_NAMES[state.animal]||'')+'  ·  '+LANG_LABELS[lang];
@@ -799,7 +818,33 @@ function goHome(){
   renderList();
 }
 
-function startFromType(){createSession(typeLabel(selType),selType);}
+function startFromType(){
+  const s=createSession(typeLabel(selType),selType);
+  autoStartMeeting(s);
+}
+
+async function autoStartMeeting(s){
+  const mt=MTG_TYPES.find(t=>t.id===s.mtgType)||MTG_TYPES[MTG_TYPES.length-1];
+  const lang=state.lang||'ko';
+  const openMsg=(MTG_OPEN[mt.id]||MTG_OPEN.other)[lang]||(MTG_OPEN[mt.id]||MTG_OPEN.other).ko;
+  s.turns.push({role:'_auto',content:openMsg});save();
+  const chat=document.getElementById('chat');
+  const trow=appendThinking(chat);
+  setBusy(true);ctrl=new AbortController();
+  let bbl=null,streamed='';
+  try{
+    const msgs=s.turns.filter(t=>t.role!=='_sum'&&t.role!=='_auto').concat([{role:'user',content:openMsg}]);
+    streamed=await callWorker(msgs,state.name,lang,
+      ({text:t})=>{streamed=t;if(!bbl){trow.remove();bbl=appendBubble(chat,'ai','');}bbl.textContent=t;scrollBottom();},
+      ctrl.signal
+    );
+    trow.remove();
+    s.turns.push({role:'assistant',content:streamed});save();
+  }catch(e){
+    trow.remove();
+    if(e.name!=='AbortError')appendBubble(chat,'ai','오류가 발생했습니다. 다시 시도해주세요.');
+  }finally{setBusy(false);scrollBottom();renderList();}
+}
 
 function createSession(topic,mt){
   const id=mkId();
@@ -889,7 +934,8 @@ async function send(){
   const inp=document.getElementById('inp');const text=inp.value.trim();if(!text)return;
   inp.value='';growInp(inp);
   let s=getSess(state.active);
-  if(viewMode==='home'||!s)s=createSession(text,selType);
+  const isNew=viewMode==='home'||!s;
+  if(isNew)s=createSession(text,selType);
   s.turns.push({role:'user',content:text});save();
   const chat=document.getElementById('chat');
   appendBubble(chat,'u',text);
