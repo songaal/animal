@@ -997,7 +997,7 @@ async function send(){
   let bbl=null,streamed='';
   try{
     streamed=await callWorker(
-      s.turns.filter(t=>t.role!=='_sum'&&t.role!=='_auto'),
+      s.turns.filter(t=>t.role!=='_sum').map(t=>t.role==='_auto'?{...t,role:'user'}:t),
       state.name, state.lang||'ko',
       ({text:t})=>{streamed=t;if(!bbl){trow.remove();bbl=appendBubble(chat,'ai','');}bbl.textContent=t;scrollBottom();},
       ctrl.signal
@@ -1016,7 +1016,7 @@ async function endMeeting(){
   const chat=document.getElementById('chat');const trow=appendThinking(chat);
   setBusy(true);ctrl=new AbortController();
   const cfg=LANG_CFG[state.lang||'ko'];
-  const msgs=[...s.turns.filter(t=>t.role!=='_sum'&&t.role!=='_auto'),{role:'user',content:cfg.sumPrompt}];
+  const msgs=[...s.turns.filter(t=>t.role!=='_sum').map(t=>t.role==='_auto'?{...t,role:'user'}:t),{role:'user',content:cfg.sumPrompt}];
   let bbl=null,streamed='';
   try{
     streamed=await callWorker(
